@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專案卡片管理編輯器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: #06b6d4;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+        }
+        .input-group input, .input-group textarea, .input-group select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .project-item {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: grab;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .project-item:hover {
+            background: rgba(15, 23, 42, 0.5);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .project-item.active {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: #06b6d4;
+        }
+        .project-item.dragging {
+            opacity: 0.5;
+            background: rgba(6, 182, 212, 0.3);
+        }
+        .project-item.drag-over {
+            border-top: 2px solid #06b6d4;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-12">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-4xl font-bold text-white mb-2">專案卡片管理編輯器</h1>
+                        <p class="text-slate-400">編輯並管理 PM4.html 首頁的所有專案卡片</p>
+                    </div>
+                    <a href="PM4.html" class="bg-cyan-500 hover:bg-cyan-600 text-slate-950 px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
+                        <i data-lucide="external-link" class="w-4 h-4"></i> 返回首頁
+                    </a>
+                </div>
+            </div>
+
+            <!-- Projects Grid & Editor -->
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Projects List -->
+                <div class="lg:col-span-1">
+                    <div class="glass-card p-6 rounded-2xl sticky top-8">
+                        <h2 class="text-xl font-bold mb-6">專案列表</h2>
+                        <p class="text-xs text-slate-500 mb-4">拖拽調整順序</p>
+                        <div id="projectsList" class="space-y-2 max-h-[70vh] overflow-y-auto">
+                            <!-- Projects dynamically loaded -->
+                        </div>
+                        <div class="mt-4 text-xs text-slate-500">拖拽排序後自動保存，同步更新 PM4 首頁。</div>
+                        <button onclick="addNewProject()" class="w-full mt-6 bg-cyan-500 hover:bg-cyan-600 text-slate-950 px-4 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 新增專案
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Editor -->
+                <div class="lg:col-span-3">
+                    <div id="editorContainer" class="glass-card p-10 rounded-2xl">
+                        <div class="text-center text-slate-400 py-12">
+                            <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+                            <p>選擇或新增一個專案以開始編輯</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // 預設專案資料結構
+        const defaultProjects = [
+            {
+                id: 'app',
+                title: 'JetFi eSIM App 首頁重構策略',
+                category: 'saas',
+                categoryLabel: 'Enterprise SaaS',
+                image: 'https://duk.tw/HzMCYM.jpg',
+                description: '優化APP首頁，解決跨部門數據孤島問題。',
+                link: 'project-detail.html?id=app',
+                metrics: [
+                    { label: '下載量提升', value: '+45%' },
+                    { label: 'CTR 提升', value: '+30%' },
+                    { label: '用戶滿意度', value: '4.8/5' }
+                ],
+                strategy: '本專案核心在於優化 APP 首頁佈局，統一數據展示入口，降低跨部門協作成本。',
+                highlights: ['首頁重構', '用戶研究', '數據視覺化'],
+                detailContent: '<p class="text-slate-400 leading-relaxed">這裡是 JetFi eSIM App 專案內頁內容，可在管理器內修改此段落。</p>'
+            },
+            {
+                id: 'abtest',
+                title: 'KDDI 原生eSIM 數位廣告',
+                category: 'marketing',
+                categoryLabel: 'Growth PM Case Study',
+                image: 'https://duk.tw/pV3r3X.jpg',
+                description: '12 月份累積投放數據分析：透過「增長漏斗」與「三維度素材模型」佈局。',
+                link: 'project-detail.html?id=abtest',
+                metrics: [
+                    { label: 'ROAS', value: '3.2x' },
+                    { label: '轉化率', value: '+85%' },
+                    { label: '成本節省', value: '-25%' }
+                ],
+                strategy: '透過分層測試與數據分析，逐步優化廣告素材與投放策略。',
+                highlights: ['A/B 測試', '漏斗分析', '素材優化'],
+                detailContent: '<p class="text-slate-400 leading-relaxed">這裡是 KDDI 原生eSIM 專案內頁內容，可在管理器內修改此段落。</p>'
+            },
+            {
+                id: 'meta',
+                title: 'Meta 廣告投遞優化',
+                category: 'marketing',
+                categoryLabel: 'Growth Marketing',
+                image: 'https://duk.tw/Qet6p6.jpg',
+                description: '利用科學實驗方法論，驗證素材賣點，達成 4.8x ROAS。',
+                link: 'project-detail.html?id=meta',
+                metrics: [
+                    { label: 'ROAS', value: '4.8x' },
+                    { label: 'CPM 降低', value: '-40%' },
+                    { label: '轉化率', value: '+120%' }
+                ],
+                strategy: '建立科學化的實驗框架，透過多維度素材測試找出最優組合。',
+                highlights: ['實驗設計', '素材測試', '轉化優化'],
+                detailContent: '<p class="text-slate-400 leading-relaxed">這裡是 Meta 廣告投遞專案內頁內容，可在管理器內修改此段落。</p>'
+            },
+            {
+                id: 'kol',
+                title: 'KOL 影響者媒合與成效優化',
+                category: 'kol',
+                categoryLabel: 'KOL',
+                image: 'https://duk.tw/Ykn6EF.jpg',
+                description: '優化企業報表自動化，解決跨部門數據孤島問題。',
+                link: 'project-detail.html?id=kol',
+                metrics: [
+                    { label: 'ROAS', value: '3.4x' },
+                    { label: '下載提升', value: '+500%' },
+                    { label: 'KOL 簽約', value: '10+' }
+                ],
+                strategy: '建立標準化的 KOL 篩選與媒合流程，優化成效追蹤機制。',
+                highlights: ['KOL 管理', 'SOP 標準化', '成效追蹤'],
+                detailContent: '<p class="text-slate-400 leading-relaxed">這裡是 KOL 影響者媒合專案內頁內容，可在管理器內修改此段落。</p>'
+            }
+        ];
+
+        let currentProjectId = null;
+        let projects = [];
+
+        // 初始化
+        function init() {
+            loadProjects();
+            renderProjectsList();
+        }
+
+        // 從 localStorage 載入或使用預設
+        function loadProjects() {
+            const saved = localStorage.getItem('portfolioProjects');
+            projects = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultProjects));
+        }
+
+        // 儲存到 localStorage
+        function saveProjects() {
+            localStorage.setItem('portfolioProjects', JSON.stringify(projects));
+            updatePM4();
+        }
+
+        // 更新 PM4.html (透過 localStorage)
+        function updatePM4() {
+            localStorage.setItem('pm4Projects', JSON.stringify(projects));
+            alert('已保存！刷新 PM4.html 以查看更新。');
+        }
+
+        // 渲染項目清單
+        function renderProjectsList() {
+            const list = document.getElementById('projectsList');
+            list.innerHTML = projects.map((p, idx) => `
+                <div class="project-item ${currentProjectId === p.id ? 'active' : ''}" 
+                     draggable="true" 
+                     data-id="${p.id}"
+                     onclick="editProject('${p.id}')"
+                     ondragstart="handleDragStart(event)"
+                     ondragend="handleDragEnd(event)"
+                     ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event)"
+                     ondragleave="handleDragLeave(event)">
+                    <div class="flex items-start gap-3">
+                        <div class="mt-1 text-slate-600 flex-shrink-0">⋮⋮</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-sm truncate">${p.title}</div>
+                            <div class="text-xs text-slate-500 mt-1">${p.categoryLabel}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = e.target.closest('.project-item');
+            draggedElement.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            const items = document.querySelectorAll('.project-item');
+            items.forEach(item => {
+                item.classList.remove('dragging', 'drag-over');
+            });
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const item = e.target.closest('.project-item');
+            if (item && item !== draggedElement) {
+                item.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const item = e.target.closest('.project-item');
+            if (item) {
+                item.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropTarget = e.target.closest('.project-item');
+            
+            if (!dropTarget || !draggedElement || draggedElement === dropTarget) return;
+
+            const draggedId = draggedElement.dataset.id;
+            const targetId = dropTarget.dataset.id;
+
+            const draggedIdx = projects.findIndex(p => p.id === draggedId);
+            const targetIdx = projects.findIndex(p => p.id === targetId);
+
+            if (draggedIdx === -1 || targetIdx === -1) return;
+
+            const draggedProject = projects[draggedIdx];
+            projects.splice(draggedIdx, 1);
+            projects.splice(targetIdx, 0, draggedProject);
+
+            saveProjects();
+            renderProjectsList();
+        }
+
+        // 編輯專案
+        function editProject(id) {
+            currentProjectId = id;
+            const project = projects.find(p => p.id === id);
+            
+            if (!project) return;
+
+            renderEditor(project);
+            renderProjectsList();
+        }
+
+        // 渲染編輯器
+        function renderEditor(project) {
+            const galleryImages = project.galleryImages || [];
+            const metrics = project.metrics || [];
+            const highlights = project.highlights || [];
+            const editor = document.getElementById('editorContainer');
+            editor.innerHTML = `
+                <div class="space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-6">編輯 "${project.title}"</h2>
+                        <button onclick="deleteProject('${project.id}')" class="text-red-500 hover:text-red-400 text-sm flex items-center gap-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> 刪除此專案
+                        </button>
+                    </div>
+
+                    <!-- Basic Info -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-cyan-400">基本資訊</h3>
+                        <div class="input-group">
+                            <label>專案標題</label>
+                            <input type="text" id="title" value="${project.title}" placeholder="輸入專案標題">
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <label>分類</label>
+                                <select id="category">
+                                    <option value="saas" ${project.category === 'saas' ? 'selected' : ''}>SaaS/系統</option>
+                                    <option value="marketing" ${project.category === 'marketing' ? 'selected' : ''}>數位廣告</option>
+                                    <option value="kol" ${project.category === 'kol' ? 'selected' : ''}>KOL</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>分類標籤</label>
+                                <input type="text" id="categoryLabel" value="${project.categoryLabel}" placeholder="如：Growth Marketing">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>卡片圖片 URL</label>
+                            <input type="text" id="image" value="${project.image}" placeholder="輸入圖片網址">
+                        </div>
+                        <div class="input-group">
+                            <label>卡片描述</label>
+                            <textarea id="description" rows="3" placeholder="輸入卡片描述">${project.description}</textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>詳情頁面連結</label>
+                            <input type="text" id="link" value="${project.link}" placeholder="如：project-detail.html?id=app">
+                        </div>
+                    </div>
+
+                    <!-- Detail Page Content -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-cyan-400">內頁內容</h3>
+                        <div class="input-group">
+                            <label>專案內頁 HTML</label>
+                            <textarea id="detailContent" rows="8" placeholder="在此輸入專案內頁內容（支援 HTML）">${project.detailContent || ''}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Strategy -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-cyan-400">執行策略</h3>
+                        <div class="input-group">
+                            <label>核心策略說明</label>
+                            <textarea id="strategy" rows="4" placeholder="輸入核心策略">${project.strategy}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Metrics -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-cyan-400">關鍵指標</h3>
+                        <div id="metricsContainer" class="space-y-3">
+                            ${project.metrics.map((m, i) => `
+                                <div class="flex gap-2 items-end">
+                                    <div class="flex-1 input-group">
+                                        <label class="text-xs">指標名稱</label>
+                                        <input type="text" class="metric-label" value="${m.label}" placeholder="指標名稱">
+                                    </div>
+                                    <div class="flex-1 input-group">
+                                        <label class="text-xs">數值</label>
+                                        <input type="text" class="metric-value" value="${m.value}" placeholder="數值">
+                                    </div>
+                                    <button onclick="removeMetric(${i})" class="text-red-500 hover:text-red-400 p-2">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button onclick="addMetric()" class="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 新增指標
+                        </button>
+                    </div>
+
+                    <!-- Highlights -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-cyan-400">亮點標籤</h3>
+                        <div id="highlightsContainer" class="flex flex-wrap gap-2">
+                            ${project.highlights.map((h, i) => `
+                                <div class="bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2">
+                                    <span>${h}</span>
+                                    <button onclick="removeHighlight(${i})" class="text-red-500 hover:text-red-400">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="newHighlight" placeholder="輸入標籤名稱" class="input-group flex-1">
+                            <button onclick="addHighlight()" class="bg-cyan-500 hover:bg-cyan-600 text-slate-950 px-4 py-2 rounded-lg font-bold transition">新增</button>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-4 pt-6 border-t border-slate-700">
+                        <button onclick="saveProject()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-slate-950 px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i> 保存並更新
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        }
+
+        // 保存專案
+        function saveProject() {
+            if (!currentProjectId) return;
+
+            const metrics = [];
+            document.querySelectorAll('.metric-label').forEach((el, i) => {
+                const label = el.value;
+                const value = document.querySelectorAll('.metric-value')[i].value;
+                if (label && value) metrics.push({ label, value });
+            });
+
+            const highlights = Array.from(document.querySelectorAll('#highlightsContainer > div')).map(el => 
+                el.textContent.trim().replace('×', '').trim()
+            );
+
+            const project = projects.find(p => p.id === currentProjectId);
+            project.title = document.getElementById('title').value;
+            project.category = document.getElementById('category').value;
+            project.categoryLabel = document.getElementById('categoryLabel').value;
+            project.image = document.getElementById('image').value;
+            project.description = document.getElementById('description').value;
+            project.link = document.getElementById('link').value;
+            project.strategy = document.getElementById('strategy').value;
+            project.detailContent = document.getElementById('detailContent').value;
+            project.metrics = metrics;
+            project.highlights = highlights;
+
+            saveProjects();
+            renderProjectsList();
+            renderEditor(project);
+        }
+
+        // 新增專案
+        function addNewProject() {
+            const newId = 'project-' + Date.now();
+            projects.push({
+                id: newId,
+                title: '新專案',
+                category: 'saas',
+                categoryLabel: 'Category',
+                image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800',
+                description: '專案描述',
+                link: `project-detail.html?id=${newId}`,
+                metrics: [
+                    { label: '指標1', value: '数值1' }
+                ],
+                strategy: '核心策略',
+                detailContent: '<p class="text-slate-400 leading-relaxed">這是新的專案內頁內容，您可在此更新內頁文案。</p>',
+                highlights: ['標籤1']
+            });
+            saveProjects();
+            renderProjectsList();
+            editProject(newId);
+        }
+
+        // 刪除專案
+        function deleteProject(id) {
+            if (confirm('確定要刪除此專案嗎？')) {
+                projects = projects.filter(p => p.id !== id);
+                currentProjectId = null;
+                saveProjects();
+                renderProjectsList();
+                document.getElementById('editorContainer').innerHTML = `
+                    <div class="text-center text-slate-400 py-12">
+                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+                        <p>選擇或新增一個專案以開始編輯</p>
+                    </div>
+                `;
+            }
+        }
+
+        function moveProject(id, direction) {
+            const index = projects.findIndex(p => p.id === id);
+            if (index === -1) return;
+            const nextIndex = index + direction;
+            if (nextIndex < 0 || nextIndex >= projects.length) return;
+            [projects[index], projects[nextIndex]] = [projects[nextIndex], projects[index]];
+            saveProjects();
+            renderProjectsList();
+        }
+
+        // 指標操作
+        function addMetric() {
+            const container = document.getElementById('metricsContainer');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-end';
+            div.innerHTML = `
+                <div class="flex-1 input-group">
+                    <label class="text-xs">指標名稱</label>
+                    <input type="text" class="metric-label" placeholder="指標名稱">
+                </div>
+                <div class="flex-1 input-group">
+                    <label class="text-xs">數值</label>
+                    <input type="text" class="metric-value" placeholder="數值">
+                </div>
+                <button onclick="removeMetric(${index})" class="text-red-500 hover:text-red-400 p-2">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
+        function removeMetric(index) {
+            document.getElementById('metricsContainer').children[index].remove();
+        }
+
+        // 標籤操作
+        function addHighlight() {
+            const input = document.getElementById('newHighlight');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const container = document.getElementById('highlightsContainer');
+            const div = document.createElement('div');
+            div.className = 'bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2';
+            const index = container.children.length;
+            div.innerHTML = `
+                <span>${text}</span>
+                <button onclick="removeHighlight(${index})" class="text-red-500 hover:text-red-400">
+                    <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+            `;
+            container.appendChild(div);
+            input.value = '';
+            lucide.createIcons();
+        }
+
+        function removeHighlight(index) {
+            document.getElementById('highlightsContainer').children[index].remove();
+        }
+
+        // 啟動
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JetFi eSIM App 首頁重構策略 | 案例研究</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .mobile-frame {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 8px solid #1e293b;
+            background-color: #fff;
+        }
+        
+        /* 圖片懸停放大特效 */
+        .zoom-img {
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+        .zoom-img:hover {
+            transform: scale(1.02);
+        }
+        /* Lightbox 樣式 */
+        #lightbox {
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #lightbox.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 100;
+            width: 54px;
+            height: 54px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .back-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: scale(1.1) rotate(180deg);
+        }
+        /* 當 Lightbox 開啟時隱藏右上角浮動按鈕 */
+        body.lightbox-open .back-btn {
+            display: none !important;
+        }
+        /* Back to Top 按鈕樣式 */
+        #backToTop {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(30,41,59,0.8);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px);
+            transition: opacity .24s ease, transform .24s ease, visibility .24s;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        #backToTop.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        #backToTop:hover {
+            transform: translateY(0) scale(1.05);
+            background: rgba(59,130,246,0.9);
+        }
+        /* Artwork wrapper: place GIF underneath and PNG on top */
+        .art-wrap {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+        }
+        .art-wrap .gif-under {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.05);
+            width: auto;
+            height: auto;
+            max-width: 92%;
+            max-height: 92%;
+            object-fit: contain;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .art-wrap .png-top {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 10;
+            pointer-events: none;
+        }
+        @media (min-width: 1024px) {
+            .art-wrap { border-radius: 1.5rem; }
+            .art-wrap .gif-under,
+            .art-wrap .png-top { border-radius: 1.5rem; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-500 selection:text-white">
+    <!-- Back to Home Button (Circular X) -->
+    <a href="PM4.html" class="back-btn" title="返回首頁" aria-label="返回首頁" role="button">
+        <i data-lucide="x" class="w-5 h-5"></i>
+    </a>
+
+    <!-- Hero Section -->
+    <header class="relative bg-slate-900 text-white overflow-hidden min-h-screen flex items-center">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl" style="background: #FFCF42"></div>
+            <div class="absolute top-1/2 right-12 w-[30rem] h-[30rem] rounded-full blur-3xl" style="background: #FFCF42"></div>
+        </div>
+        
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-8">
+                <div class="lg:w-1/2 max-w-3xl">
+                    <div class="inline-flex items-center space-x-2 bg-white/10 rounded-full px-4 py-2 mb-6 backdrop-blur-sm border border-white/20">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-brand-100"></i>
+                        <span class="text-sm font-medium tracking-wider text-brand-100">JetFi Mobile App</span>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6">
+                        JetFi eSIM App 首頁重構策略<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-indigo-400">釋放數位螢幕坪效</span>
+                    </h1>
+                     <p class="text-xl md:text-2xl text-slate-300 mb-10 leading-relaxed font-light">
+                        2025/06-07
+                    </p>
+                    <p class="text-xl md:text-2xl text-slate-300 mb-10 leading-relaxed font-light">
+                        產品經理視角下的介面空間重分配與決策推演，成功將核心購買區可見度提升 2.5 倍，驅動行銷與轉換變現。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#overview" class="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-brand-500/30 flex items-center">
+                            觀看案例 <i data-lucide="arrow-down" class="ml-2 w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 flex justify-center">
+                    <div class="relative w-[140px] h-[290px] lg:w-[290px] lg:h-[600px] art-wrap">
+                        <img src="https://jetfi-s3.s3.ap-northeast-1.amazonaws.com/web/APP/method1.gif" alt="device-gif" class="gif-under">
+                        <img src="https://jetfi-s3.s3.ap-northeast-1.amazonaws.com/web/APP/iPhone13Pro_BG.png" alt="device-bg" class="png-top">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Overview Section -->
+    <section id="overview" class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+                <h2 class="text-sm font-bold text-brand-600 tracking-widest uppercase mb-2">Overview</h2>
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-900">專案全貌</h3>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Problem -->
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 reveal transition-transform hover:-translate-y-1">
+                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="alert-triangle"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">現況挑戰 (Problem)</h4>
+                    <p class="text-slate-600 leading-relaxed">核心「購買區」僅佔畫面 19.2%，轉換漏斗在第一步即產生斷層，大量使用者流失。</p>
+                </div>
+                
+                <!-- Strategy -->
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 reveal transition-transform hover:-translate-y-1" style="transition-delay: 100ms;">
+                    <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="map"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">核心策略 (Strategy)</h4>
+                    <p class="text-slate-600 leading-relaxed">重分配介面空間，消除無效佔位，打造兼顧「行銷活動」與「直接轉換」的變現引擎。</p>
+                </div>
+
+                <!-- Result -->
+                <div class="p-8 rounded-2xl bg-brand-600 text-white shadow-xl reveal transition-transform hover:-translate-y-1" style="transition-delay: 200ms;">
+                    <div class="w-12 h-12 bg-white/20 text-white rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">預期成效 (Result)</h4>
+                    <div class="text-4xl font-black mb-2">2.5x</div>
+                    <p class="text-brand-100 leading-relaxed">首屏轉換區可見度大幅提升，購買區佔比從 19.2% 攀升至 49.1%。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Diagnosis Section -->
+    <section class="py-24 bg-slate-50 overflow-hidden">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-16">
+                
+                <div class="lg:w-1/2 reveal">
+                    <h2 class="text-sm font-bold text-brand-600 tracking-widest uppercase mb-2">Diagnosis</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold text-slate-900 mb-6">現況診斷：黃金版面坪效流失</h3>
+                    <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                        透過熱點圖分析舊版首頁，發現畫面被大量低效區塊佔據，導致最具價值的「購買區」被邊緣化，使用者需滑動才能看見完整購買選項。
+                    </p>
+                    
+                    <ul class="space-y-6">
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 mt-1 mr-4">1</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">無效的頂部空間 (9.6%)</h4>
+                                <p class="text-slate-600 mt-1">Header 佔比過大，按鈕不直覺，動態 Banner 壓縮了下方視野。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mt-1 mr-4">2</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">佔用空間的低效區塊 (30.9%)</h4>
+                                <p class="text-slate-600 mt-1">「熱門推薦」佔據超過 30% 畫面，卻缺乏實際導購功能，無效點擊多。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mt-1 mr-4">3</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">被邊緣化的核心轉換區 (僅 19.2%)</h4>
+                                <p class="text-slate-600 mt-1">最重要的第一步購買列表被擠壓至畫面底部，成為轉換漏斗的阻礙。</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Original UI Screenshot -->
+                <div class="lg:w-1/2 flex justify-center reveal" style="transition-delay: 200ms;">
+                    <img src="https://duk.tw/flYJil.jpg" alt="原版首頁熱點圖" class="w-full h-full object-cover zoom-img" onclick="openLightbox(this.src)">
+                    <!-- <div class="relative w-[300px] h-[600px] rounded-[2.5rem] mobile-frame overflow-hidden flex flex-col group">
+                        <img src="img/原首頁.jpg" alt="原版首頁熱點圖" class="w-full h-full object-cover zoom-img" onclick="openLightbox(this.src)">
+                        <div class="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                            <span class="bg-black/70 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-md">原版介面熱點圖 (Before)</span>
+                        </div>
+                    </div> -->
+                </div>
+                
+            </div>
+            <img src="https://duk.tw/flYJil.jpg" alt="原版首頁熱點圖" class="w-full h-full object-cover zoom-img" onclick="openLightbox(this.src)">
+        </div>
+    </section>
+
+    <!-- Goals Section -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+                <h2 class="text-sm font-bold text-brand-600 tracking-widest uppercase mb-2">North Star</h2>
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-900">專案北極星目標</h3>
+                <p class="text-slate-600 mt-4">兼顧空間、行銷與轉換的三大核心支柱</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6 reveal">
+                    <div class="mx-auto w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800 mb-6">
+                        <i data-lucide="maximize" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">釋放空間價值</h4>
+                    <p class="text-slate-600">重劃「熱門推薦」，縮小頂部內容，重新配置首屏 2/3 畫面，將好位置留給高價值行為。</p>
+                </div>
+                <div class="text-center p-6 reveal" style="transition-delay: 100ms;">
+                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center text-brand-600 mb-6">
+                        <i data-lucide="megaphone" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">賦能行銷活動</h4>
+                    <p class="text-slate-600">新增 KOL 優惠碼專屬曝光區，承接外部流量，建立順暢無斷點的導購體驗。</p>
+                </div>
+                <div class="text-center p-6 reveal" style="transition-delay: 200ms;">
+                    <div class="mx-auto w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
+                        <i data-lucide="mouse-pointer-click" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">極大化轉換率</h4>
+                    <p class="text-slate-600">大幅提高「購買列表」可見度，明確定義使用者的「購買起點」，縮短決策路徑。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Iteration Section (Refactored to showcase actual boards) -->
+    <section class="py-24 bg-slate-900 text-white">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-sm font-bold text-brand-400 tracking-widest uppercase mb-2">Iteration</h2>
+                <h3 class="text-3xl md:text-4xl font-bold mb-4">迭代探索與取捨</h3>
+                <p class="text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                    在「KOL 行銷曝光」與「購買流程轉換」之間尋求最佳平衡。這不是一蹴可幾的過程，而是經過多次版本推演的商業決策。（點擊圖片可放大檢視細節）
+                </p>
+            </div>
+
+            <div class="space-y-24">
+                <!-- V1 -->
+                <div class="reveal">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                        <div>
+                            <div class="text-brand-400 font-bold mb-2 tracking-wide">版本 1 (V1)</div>
+                            <h4 class="text-2xl font-bold text-white flex items-center gap-3">
+                                KOL 入口優先
+                                <span class="bg-slate-800 text-slate-300 text-sm px-3 py-1 rounded-full border border-slate-700">購買區佔比 33.8%</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 p-2 md:p-4 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden group">
+                        <img src="https://duk.tw/V7JX8c.jpg" alt="版本 1 分析與流程" class="w-full rounded-2xl zoom-img object-cover" onclick="openLightbox(this.src)">
+                    </div>
+                    <div class="mt-6 grid md:grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <strong class="text-green-400 block mb-2"><i data-lucide="thumbs-up" class="inline w-4 h-4 mr-1"></i> 優勢</strong>
+                            <p class="text-slate-400 text-sm">Header 與行銷 Banner 縮小，新增快捷按鈕，並以卡片承接 KOL 導流進來的用戶，提升曝光。</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <strong class="text-red-400 block mb-2"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> 痛點與決策</strong>
+                            <p class="text-slate-400 text-sm">若無活動時會造成版面空窗；KOL 素材難以呈現且資訊重疊，需開發調整成本過高。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- V2 -->
+                <div class="reveal">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                        <div>
+                            <div class="text-brand-400 font-bold mb-2 tracking-wide">版本 2 (V2)</div>
+                            <h4 class="text-2xl font-bold text-white flex items-center gap-3">
+                                強調任務導向
+                                <span class="bg-slate-800 text-slate-300 text-sm px-3 py-1 rounded-full border border-slate-700">購買區佔比 33.8%</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 p-2 md:p-4 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden group">
+                        <img src="https://duk.tw/L1SaHA.jpg" alt="版本 2 分析與流程" class="w-full rounded-2xl zoom-img object-cover" onclick="openLightbox(this.src)">
+                    </div>
+                    <div class="mt-6 grid md:grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <strong class="text-green-400 block mb-2"><i data-lucide="thumbs-up" class="inline w-4 h-4 mr-1"></i> 優勢</strong>
+                            <p class="text-slate-400 text-sm">提高 icon 快捷按鈕的位置，讓用戶更快找到功能，明確任務漏斗導向。</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <strong class="text-red-400 block mb-2"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> 痛點與決策</strong>
+                            <p class="text-slate-400 text-sm">行銷 Banner 圖片被放置到後方，可能因盲區而影響用戶視線，行銷資訊容易被忽略。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- V3 -->
+                <div class="reveal">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                        <div>
+                            <div class="text-brand-400 font-bold mb-2 tracking-wide">版本 3 (V3)</div>
+                            <h4 class="text-2xl font-bold text-white flex items-center gap-3">
+                                極致轉換導向
+                                <span class="bg-brand-500/20 text-brand-300 text-sm px-3 py-1 rounded-full border border-brand-500/50">購買區佔比 65.8%</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 p-2 md:p-4 rounded-3xl border border-brand-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)] overflow-hidden group relative">
+                        <div class="absolute top-6 right-6 bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 shadow-lg pointer-events-none">轉換表現最佳</div>
+                        <img src="https://duk.tw/STBdu1.jpg" alt="版本 3 分析與流程" class="w-full rounded-2xl zoom-img object-cover" onclick="openLightbox(this.src)">
+                    </div>
+                    <div class="mt-6 grid md:grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <strong class="text-green-400 block mb-2"><i data-lucide="thumbs-up" class="inline w-4 h-4 mr-1"></i> 優勢</strong>
+                            <p class="text-slate-400 text-sm">移除 Header 區塊，畫面全數上移；以底色界定優惠與功能區，轉換率（佔比 65.8%）極大化。</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-orange-500/30">
+                            <strong class="text-orange-400 block mb-2"><i data-lucide="scale" class="inline w-4 h-4 mr-1"></i> 權衡決策</strong>
+                            <p class="text-orange-200 text-sm">轉換率雖高，但若有多位 KOL 無法同時透過 Banner 露出，其他粉絲難以直覺找到專屬優惠碼，<strong class="text-white">犧牲了商業操作彈性，因此未被採納</strong>。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- V4 (Final) -->
+                <div class="reveal">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                        <div>
+                            <div class="text-brand-400 font-bold mb-2 tracking-wide">版本 4 (V4)</div>
+                            <h4 class="text-2xl font-bold text-white flex items-center gap-3">
+                                模組化整合 達成完美平衡
+                                <span class="bg-brand-500/20 text-brand-300 text-sm px-3 py-1 rounded-full border border-brand-500/50">購買區佔比 65.8%</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-b from-brand-900/50 to-slate-800 p-2 md:p-4 rounded-3xl border border-brand-500/50 shadow-[0_0_50px_rgba(59,130,246,0.2)] overflow-hidden group">
+                        <img src="https://duk.tw/hu3Ibu.jpg" alt="版本 4 最終方案分析" class="w-full rounded-2xl zoom-img object-cover" onclick="openLightbox(this.src)">
+                    </div>
+                     <div class="mt-6 grid md:grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                            <strong class="text-green-400 block mb-2"><i data-lucide="thumbs-up" class="inline w-4 h-4 mr-1"></i> 優勢</strong>
+                            <p class="text-slate-400 text-sm">·新增KOL優惠區塊,直覺找尋KOL優惠碼,承接kOL導入的用户<br>・功能icon整合至畫面頂部,集中功能操作區塊</br>・以底色界定優惠資訊,功能與購買列表的區塊,讓用戶能清楚了解開始購買的起點</br></p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl border border-orange-500/30">
+                            <strong class="text-orange-400 block mb-2"><i data-lucide="scale" class="inline w-4 h-4 mr-1"></i>缺點</strong>
+                            <p class="text-orange-200 text-sm">・購買列表於第一屏較版本三比重降低</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- V4 (Final) -->
+                <div class="reveal">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                        <div>
+                            <div class="inline-block bg-white text-slate-900 text-xs font-bold px-3 py-1 rounded-full mb-3">新舊比較</div>
+                            <h4 class="text-3xl font-bold text-white flex items-center gap-3">
+                                熱度圖分析
+                                <span class="bg-indigo-500/20 text-indigo-300 text-sm px-3 py-1 rounded-full border border-indigo-500/50">首屏佔比 49.1%</span>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-b from-brand-900/50 to-slate-800 p-2 md:p-4 rounded-3xl border border-brand-500/50 shadow-[0_0_50px_rgba(59,130,246,0.2)] overflow-hidden group">
+                        <img src="img/CV_圖片-04-04.jpg" alt="版本 4 最終方案分析" class="w-full rounded-2xl zoom-img object-cover" onclick="openLightbox(this.src)">
+                    </div>
+                    <div class="mt-6 bg-indigo-900/30 p-6 rounded-2xl border border-indigo-500/30">
+                        <h5 class="text-indigo-300 font-bold mb-3 flex items-center">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 mr-2 text-indigo-400"></i> 最終方案總結
+                        </h5>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            新增 KOL 優惠專屬區塊承接導流，並將功能 Icon 整合至頂部。透過底色清晰界定「優惠資訊」與「購買列表」。在兼顧多檔期行銷曝光彈性的同時，仍維持了 49.1% 的高轉換區可見度，成功打造首頁的變現引擎。
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    
+    <!-- Final Solution Details (UI Comparison) -->
+    <section class="py-24 bg-slate-50">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-16">
+                
+                <!-- Final App UI Screenshot -->
+                <div class="lg:w-1/2 flex justify-center reveal order-2 lg:order-1">
+                    <div class="relative w-[300px] h-[600px] bg-slate-900 rounded-[2.5rem] mobile-frame overflow-hidden flex flex-col group shadow-2xl shadow-brand-500/20">
+                        <img src="img/NEW.jpeg" alt="改版後首頁熱點圖" class="w-full h-full object-cover zoom-img" onclick="openLightbox(this.src)">
+                        <div class="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                            <span class="bg-brand-600/90 text-white text-xs px-4 py-1.5 rounded-full backdrop-blur-md shadow-lg border border-white/20">最終版介面 (After)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 reveal order-1 lg:order-2">
+                    <h2 class="text-sm font-bold text-brand-600 tracking-widest uppercase mb-2">Final Design</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold text-slate-900 mb-8">最終版面結構：打造變現引擎</h3>
+                    
+                    <div class="space-y-8">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold flex-shrink-0"><i data-lucide="type"></i></div>
+                            <div>
+                                <h4 class="text-xl font-bold text-slate-900 mb-2">模組 1: 動態跑馬燈</h4>
+                                <p class="text-slate-600">取代舊有的固定大 Banner，大幅節省垂直空間，解決圖片佔用版面的問題。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold flex-shrink-0"><i data-lucide="grid"></i></div>
+                            <div>
+                                <h4 class="text-xl font-bold text-slate-900 mb-2">模組 2: 快捷按鈕</h4>
+                                <p class="text-slate-600">整合原本散落的入口，強化任務導向，縮短使用者進入任務漏斗的路徑。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold flex-shrink-0"><i data-lucide="tag"></i></div>
+                            <div>
+                                <h4 class="text-xl font-bold text-slate-900 mb-2">模組 3: 最新優惠區塊</h4>
+                                <p class="text-slate-600">專為承接 KOL 流量設計的模組，隨插即用，集中操作，解決商業推廣需求。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold flex-shrink-0"><i data-lucide="shopping-cart"></i></div>
+                            <div>
+                                <h4 class="text-xl font-bold text-slate-900 mb-2">模組 4: 核心購買列表</h4>
+                                <p class="text-slate-600">建立清晰視覺錨點，利用底色區分區塊，維持 <strong class="text-brand-600">49.1%</strong> 的首屏高佔比，實現一鍵轉換。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- IA & Visual -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <div class="bg-slate-50 p-10 rounded-3xl border border-slate-100 reveal">
+                <h3 class="text-2xl font-bold text-slate-900 mb-6 flex items-center">
+                    <i data-lucide="layout" class="w-6 h-6 mr-3 text-brand-500"></i>
+                    視覺與資訊架構優化 (IA)
+                </h3>
+                <p class="text-slate-600 mb-6 font-medium text-lg">熱點圖佐證從「雜訊」到「結構化」：</p>
+                <ul class="grid md:grid-cols-2 gap-6 text-slate-600">
+                    <li class="flex items-start">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"></i>
+                        <span><strong>資訊層級重整：</strong>將舊版雜亂的資訊結構轉化為明確的結構化設計。</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"></i>
+                        <span><strong>視覺界定：</strong>利用深淺底色，有效區分「優惠資訊」與「功能購買列表」。</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"></i>
+                        <span><strong>引導標題：</strong>放大標題層級，明確告知用戶操作路徑。</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"></i>
+                        <span><strong>行為洞察：</strong>熱點圖顯示焦點成功從分散轉為集中於優惠與購買流程。</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results & Future -->
+    <section class="py-24 bg-slate-900 text-white">
+        <div class="container mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                
+                <div class="reveal">
+                    <h2 class="text-sm font-bold text-brand-400 tracking-widest uppercase mb-2">Impact</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold mb-6">改版成效：將空間浪費轉化為商業驅動力</h3>
+                    
+                    <div class="space-y-6 mb-10">
+                        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                            <h4 class="text-lg font-bold text-white mb-2 flex justify-between">
+                                <span>關鍵指標提升</span>
+                                <span class="text-brand-400">2.5x 倍增</span>
+                            </h4>
+                            <p class="text-slate-400 text-sm">購買區首屏佔比從 19.2% 大幅提升至 49.1%，第一屏即可完成選購。</p>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                            <h4 class="text-lg font-bold text-white mb-2">資訊密度優化</h4>
+                            <p class="text-slate-400 text-sm">第一屏完美容納：跑馬燈、快捷鍵、KOL 導購區與核心購買列表，互不干擾。</p>
+                        </div>
+                    </div>
+
+                    <h4 class="text-xl font-bold text-white mb-4 border-t border-slate-700 pt-8">未來展望</h4>
+                    <ul class="space-y-4 text-slate-400">
+                        <li class="flex items-center"><i data-lucide="line-chart" class="w-5 h-5 mr-3 text-brand-400"></i> 轉換率監控：驗證 49.1% 的空間佔比是否帶動實際營收成長。</li>
+                        <li class="flex items-center"><i data-lucide="users" class="w-5 h-5 mr-3 text-brand-400"></i> 行銷成效追蹤：評估 KOL 優惠模組的互動率與實際使用數。</li>
+                        <li class="flex items-center"><i data-lucide="activity" class="w-5 h-5 mr-3 text-brand-400"></i> 使用者行為分析：透過熱點圖觀察跑馬燈點擊狀況，為 v2.0 微調累積數據。</li>
+                    </ul>
+                </div>
+
+                <!-- Animated Bar Chart -->
+                <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700 reveal relative overflow-hidden">
+                    <h4 class="text-center text-slate-300 font-bold mb-10 tracking-widest">首屏購買區佔比比較</h4>
+                    
+                    <div class="flex justify-around items-end h-64 mt-4 relative">
+                        <!-- Y Axis lines -->
+                        <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+                            <div class="w-full border-b border-slate-500 flex justify-start"><span class="text-xs -mt-2 -ml-6 text-slate-300">60%</span></div>
+                            <div class="w-full border-b border-slate-500 flex justify-start"><span class="text-xs -mt-2 -ml-6 text-slate-300">40%</span></div>
+                            <div class="w-full border-b border-slate-500 flex justify-start"><span class="text-xs -mt-2 -ml-6 text-slate-300">20%</span></div>
+                            <div class="w-full border-b border-slate-500 flex justify-start"><span class="text-xs -mt-2 -ml-6 text-slate-300">0%</span></div>
+                        </div>
+
+                        <!-- Before Bar -->
+                        <div class="relative w-24 flex flex-col items-center group z-10">
+                            <div class="text-2xl font-bold text-slate-400 mb-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">19.2%</div>
+                            <div class="w-full bg-slate-500 rounded-t-md transition-all duration-1000 ease-out h-0" style="--target-h: 32%;"></div>
+                            <div class="mt-4 font-bold text-slate-400">舊版 (Before)</div>
+                        </div>
+
+                        <!-- After Bar -->
+                        <div class="relative w-24 flex flex-col items-center group z-10">
+                            <div class="text-3xl font-black text-brand-400 mb-2 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">49.1%</div>
+                            <div class="w-full bg-gradient-to-t from-brand-600 to-brand-400 rounded-t-md transition-all duration-1000 ease-out delay-500 h-0 shadow-[0_0_20px_rgba(59,130,246,0.3)] relative overflow-hidden" style="--target-h: 82%;">
+                                <div class="absolute inset-0 bg-white/20 w-full h-full transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                            </div>
+                            <div class="mt-4 font-bold text-white">新版 (After)</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-950 py-8 text-center text-slate-500 text-sm">
+        <p>基於 JetFi 首頁重構策略 • 案例研究展演</p>
+    </footer>
+
+    <!-- Lightbox for Image Zooming -->
+    <div id="lightbox" class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+        <img id="lightbox-img" src="" alt="放大檢視" class="max-w-[95vw] max-h-[95vh] object-contain cursor-zoom-out rounded-lg shadow-2xl">
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Scroll Reveal Animation
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    
+                    // Trigger bar chart animation if it's the chart section
+                    const bars = entry.target.querySelectorAll('[style*="--target-h"]');
+                    bars.forEach(bar => {
+                        setTimeout(() => {
+                            bar.style.height = bar.getPropertyValue('--target-h');
+                        }, 300);
+                    });
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            root: null,
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // Lightbox functionality
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling background
+            document.body.classList.add('lightbox-open');
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            document.body.classList.remove('lightbox-open');
+            setTimeout(() => lightboxImg.src = '', 300); // Clear src after fade out
+        }
+
+        // Close lightbox on Escape key press
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape" && lightbox.classList.contains('active')) {
+                closeLightbox();
+            }
+        });
+
+        // Back to Top 功能：超過第一屏才顯示，點擊平滑回到最上方
+        (function() {
+            const btn = document.createElement('button');
+            btn.id = 'backToTop';
+            btn.type = 'button';
+            btn.title = '回到最上方';
+            btn.setAttribute('aria-label', '回到最上方');
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+            document.body.appendChild(btn);
+
+            function toggle() {
+                if (!btn) return;
+                if (window.scrollY > window.innerHeight) {
+                    btn.classList.add('show');
+                } else {
+                    btn.classList.remove('show');
+                }
+            }
+
+            window.addEventListener('scroll', toggle, { passive: true });
+            // initial check
+            toggle();
+
+            btn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            btn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

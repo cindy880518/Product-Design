@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Case Study | 日本 eSIM 流量增長策略</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0c10;
+            color: #e2e8f0;
+            scroll-behavior: smooth;
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0a0c10 100%);
+        }
+
+        .card-bg {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat-value {
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        /* 漏斗樣式 */
+        .funnel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .funnel-step {
+            position: relative;
+            width: 100%;
+            padding: 2rem;
+            text-align: center;
+            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%);
+            transition: all 0.3s ease;
+        }
+
+        .funnel-step:hover {
+            filter: brightness(1.2);
+            transform: translateY(-2px);
+        }
+
+        .step-top { background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%); max-width: 600px; }
+        .step-mid { background: linear-gradient(90deg, #155e75 0%, #0891b2 100%); max-width: 480px; }
+        .step-bottom { background: linear-gradient(90deg, #581c87 0%, #7c3aed 100%); max-width: 360px; }
+
+        /* 行銷三個圈樣式 */
+        .strategy-circle {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .strategy-circle:hover {
+            transform: scale(1.05);
+            z-index: 40;
+        }
+
+        .vs-badge {
+            position: absolute;
+            left: 50%;
+            top: 35%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            background: #3b82f6;
+            color: white;
+            font-weight: 900;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 4px solid #0a0c10;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 1);
+            font-style: italic;
+            font-size: 1.5rem;
+        }
+
+        .image-placeholder {
+            background: linear-gradient(45deg, #1e293b, #0f172a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1.1;
+            border-radius: 16px;
+            border: 1px dashed rgba(59, 130, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-tag {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            padding: 0.75rem;
+            border-radius: 12px;
+        }
+
+        .vs-divider {
+            position: absolute;
+            left: 50%;
+            top: 5%;
+            bottom: 5%;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.3), transparent);
+            z-index: 10;
+        }
+
+        /* 返回按鈕樣式 - 修改為圓形 */
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 100;
+            width: 54px;
+            height: 54px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%; /* 關鍵：設置為圓形 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .back-btn:hover {
+            background: rgba(239, 68, 68, 0.2); /* 懸停時略微偏紅，提示關閉行為 */
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: scale(1.1) rotate(180deg);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .back-btn i {
+            font-size: 1.25rem;
+        }
+
+        /* 詳細投放時間表樣式修正 */
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 1.5rem;
+            position: relative;
+        }
+        .timeline-grid::before {
+            content: '';
+            position: absolute;
+            left: 131px; /* 修正線條位置 */
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(59, 130, 246, 0.2);
+        }
+        .date-label {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #60a5fa;
+            padding-top: 1.5rem; /* 對齊卡片頂部 */
+            padding-right: 1.5rem;
+        }
+        .event-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        /* 修正點點跑掉的問題 */
+        .event-card::after {
+            content: '';
+            position: absolute;
+            left: -17px; /* 修正點點相對於卡片左側的位移，使其剛好落在線條上 */
+            top: 24px;
+            width: 12px;
+            height: 12px;
+            background: #3b82f6;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5);
+            z-index: 2;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 100;
+            width: 54px;
+            height: 54px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .back-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: scale(1.1) rotate(180deg);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Back to Home Button (Circular X) -->
+    <a href="PM4.html" class="back-btn" title="返回首頁">
+        <i class="fas fa-times"></i>
+    </a>
+
+    <!-- Header -->
+    <header class="hero-gradient py-24 px-6 text-center relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div class="absolute top-10 left-10 w-64 h-64 bg-blue-500 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-10 right-10 w-64 h-64 bg-blue-700 rounded-full blur-[100px]"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto relative z-10">
+            <span class="text-blue-400 font-semibold tracking-widest uppercase text-sm">Growth PM Case Study</span>
+            <h1 class="text-5xl md:text-6xl font-bold mt-4 mb-6 tracking-tight leading-tight">KDDI 原生eSIM <br><span class="text-blue-500">數位廣告策略</span></h1>
+            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                12 月份累積投放數據分析：透過「增長漏斗」與「三維度素材模型」佈局。
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-16">
+        
+        <!-- Overall Dashboard -->
+        <section class="mb-24">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-chart-line text-blue-500"></i> 12 月份核心績效指標
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="card-bg p-6 rounded-2xl text-center shadow-xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-widest mb-1">總營收</p>
+                    <p class="text-2xl stat-value">NT$ 330,278</p>
+                </div>
+                <div class="card-bg p-6 rounded-2xl text-center shadow-xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-widest mb-1">投放預算</p>
+                    <p class="text-2xl stat-value">NT$ 154,797</p>
+                </div>
+                <div class="card-bg p-6 rounded-2xl text-center shadow-xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-widest mb-1">整體 ROAS</p>
+                    <p class="text-2xl stat-value">2.13</p>
+                </div>
+                <div class="card-bg p-6 rounded-2xl text-center shadow-xl">
+                    <p class="text-gray-500 text-[10px] uppercase tracking-widest mb-1">轉換單數</p>
+                    <p class="text-2xl stat-value">715 單</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marketing Funnel Section -->
+        <section class="mb-24">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-filter text-blue-500"></i> 增長漏斗：從覺察到轉換的路徑分析
+            </h2>
+            <div class="card-bg rounded-[2.5rem] p-10 lg:p-16 border-blue-500/10 shadow-2xl overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- Funnel Visual -->
+                    <div class="funnel-container">
+                        <!-- Step 1 -->
+                        <div class="funnel-step step-top shadow-lg shadow-blue-900/40">
+                            <span class="block text-white font-black text-xl mb-1 uppercase tracking-wider">Awareness | 覺察</span>
+                            <span class="text-blue-100 text-xs opacity-80">情緒誘發（驚訝貓）- 攔截注意力</span>
+                        </div>
+                        <div class="text-blue-500 py-1"><i class="fas fa-chevron-down"></i></div>
+                        <!-- Step 2 -->
+                        <div class="funnel-step step-mid shadow-lg shadow-cyan-900/40">
+                            <span class="block text-white font-black text-xl mb-1 uppercase tracking-wider">Consideration | 考慮</span>
+                            <span class="text-cyan-100 text-xs opacity-80">利益驅動（滑雪狗）- 強化點擊動機</span>
+                        </div>
+                        <div class="text-cyan-500 py-1"><i class="fas fa-chevron-down"></i></div>
+                        <!-- Step 3 -->
+                        <div class="funnel-step step-bottom shadow-lg shadow-purple-900/40">
+                            <span class="block text-white font-black text-xl mb-1 uppercase tracking-wider">Conversion | 轉換</span>
+                            <span class="text-purple-100 text-xs opacity-80">理性數據（KDDI）- 排除技術疑慮</span>
+                        </div>
+                    </div>
+
+                    <!-- Funnel Analysis Text -->
+                    <div class="space-y-8">
+                        <div>
+                            <h4 class="text-blue-400 font-bold text-lg mb-2">上層：流量破冰 (Awareness)</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed">
+                                利用「驚訝貓」的高頻率曝光特性，在受眾刷 Reels 時精準攔截。此階段目標是 **極小化 CPM (每千次曝光成本)**，將品牌印入用戶腦中。
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="text-cyan-400 font-bold text-lg mb-2">中層：價值建立 (Consideration)</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed">
+                                針對已互動用戶投放「滑雪狗」素材，透過 5 折與原生線路利益點，提高 **CTR (點擊率)**。目標是引導用戶造訪官網，建立初次購買動機。
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="text-purple-400 font-bold text-lg mb-2">底層：最終收割 (Conversion)</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed">
+                                使用 KDDI 測速數據與官方實測圖進行再行銷。目標是優化 **CVR (轉換率)**，為那些已加入購物車與尚未結帳的用戶提供最後的「理性證明」。
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Campaign Timeline -->
+        <section class="mb-24">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-clock text-blue-500"></i> 投放時間軸與執行策略
+            </h2>
+            <div class="card-bg rounded-[2.5rem] p-8 lg:p-12 border-blue-500/10">
+                <div class="timeline-grid">
+                    <!-- Event 1 -->
+                    <div class="date-label">12/01 - 12/07</div>
+                    <div class="event-card">
+                        <h4 class="text-blue-400 font-bold mb-2 italic">Phase 1: 預熱與基礎測試</h4>
+                        <ul class="text-gray-400 text-sm space-y-2 list-disc list-inside">
+                            <li>完成三款素材核心腳本與製作</li>
+                            <li>「驚訝貓 (A)」啟動廣域投放，測試冷受眾點擊成本</li>
+                            <li>建立官網 Tracking Pixel 事件追蹤</li>
+                        </ul>
+                    </div>
+
+                    <!-- Event 2 -->
+                    <div class="date-label">12/08 - 12/15</div>
+                    <div class="event-card">
+                        <h4 class="text-blue-400 font-bold mb-2 italic">Phase 2: A/B Test 素材優化</h4>
+                        <ul class="text-gray-400 text-sm space-y-2 list-disc list-inside">
+                            <li>導入「滑雪狗 (B)」針對運動興趣標籤進行精準投遞</li>
+                            <li>比較素材 A 與 B 的 CTR 數據，發現 B 素材在考慮層轉換較佳</li>
+                            <li>調整預算權重，向轉化潛力較高的受眾傾斜</li>
+                        </ul>
+                    </div>
+
+                    <!-- Event 3 -->
+                    <div class="date-label">12/16 - 12/24</div>
+                    <div class="event-card">
+                        <h4 class="text-blue-400 font-bold mb-2 italic">Phase 3: 信任補強與再行銷</h4>
+                        <ul class="text-gray-400 text-sm space-y-2 list-disc list-inside">
+                            <li>正式推動「KDDI 數據素材 (C)」進行再行銷 Retargeting</li>
+                            <li>針對點擊過 A/B 素材但未購買者，提供理性技術證明</li>
+                            <li>ROAS 開始顯著回升，單日高峰轉換達 45 單</li>
+                        </ul>
+                    </div>
+
+                    <!-- Event 4 -->
+                    <div class="date-label">12/25 - 01/01</div>
+                    <div class="event-card">
+                        <h4 class="text-blue-400 font-bold mb-2 italic">Phase 4: 年終衝刺與複盤</h4>
+                        <ul class="text-gray-400 text-sm space-y-2 list-disc list-inside">
+                            <li>針對日本跨年旅遊潮，加碼高轉化受眾預算</li>
+                            <li>結算當月投放數據與總營收 NT$ 330,278</li>
+                            <li>複盤三款素材模型，作為下月春季策略基礎</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Marketing Strategy Circles -->
+        <section class="mb-24">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-bullseye text-blue-500"></i> 素材結構：三維度心理補位
+            </h2>
+            <div class="card-bg rounded-[2.5rem] p-8 lg:p-16 border-blue-500/10 shadow-2xl overflow-hidden relative">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <!-- Circles Visual -->
+                    <div class="relative h-[400px] flex items-center justify-center">
+                        <div class="strategy-circle absolute top-0 w-64 h-64 bg-blue-600/30 border-2 border-blue-500 rounded-full flex flex-col items-center justify-center backdrop-blur-sm -translate-x-16">
+                            <i class="fas fa-cat text-3xl mb-2 text-blue-400"></i>
+                            <span class="font-bold text-lg">情緒誘發</span>
+                            <span class="text-[10px] text-blue-300 uppercase tracking-widest">貓咪素材</span>
+                        </div>
+                        <div class="strategy-circle absolute bottom-0 w-64 h-64 bg-cyan-600/30 border-2 border-cyan-500 rounded-full flex flex-col items-center justify-center backdrop-blur-sm translate-x-16">
+                            <i class="fas fa-dog text-3xl mb-2 text-cyan-400"></i>
+                            <span class="font-bold text-lg">利益驅動</span>
+                            <span class="text-[10px] text-cyan-300 uppercase tracking-widest">狗狗素材</span>
+                        </div>
+                        <div class="strategy-circle absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-purple-600/30 border-2 border-purple-500 rounded-full flex flex-col items-center justify-center backdrop-blur-sm -translate-x-4">
+                            <i class="fas fa-database text-3xl mb-2 text-purple-400"></i>
+                            <span class="font-bold text-lg">理性數據</span>
+                            <span class="text-[10px] text-purple-300 uppercase tracking-widest">KDDI 數據</span>
+                        </div>
+                    </div>
+
+                    <!-- Strategy Description -->
+                    <div class="space-y-6">
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-bold text-blue-400">情緒 (Emotion)</h3>
+                            <p class="text-gray-400 text-sm">負責「衝擊力」，引發急迫感與共鳴。</p>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-bold text-cyan-400">利益 (Benefit)</h3>
+                            <p class="text-gray-400 text-sm">負責「誘因」，提供高 CP 值的解決方案。</p>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-bold text-purple-400">理性 (Logic)</h3>
+                            <p class="text-gray-400 text-sm">負責「信任」，用硬核數據消除購買疑慮。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- A/B Test VS Section -->
+        <section class="mb-24 relative">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-balance-scale text-blue-500"></i> 素材 A/B 測試：數據對決
+            </h2>
+            
+            <div class="card-bg rounded-[2.5rem] p-6 lg:p-12 border-blue-500/10 relative shadow-2xl">
+                <div class="hidden lg:block vs-divider"></div>
+                <div class="hidden lg:flex vs-badge">VS</div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+                    <!-- Left Column: Asset A (Cat) -->
+                    <div class="relative">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-12 h-12 bg-blue-600 text-white flex items-center justify-center rounded-2xl font-bold italic text-xl">A</div>
+                            <div>
+                                <h3 class="text-2xl font-bold">驚訝貓：情緒誘發</h3>
+                                <p class="text-blue-400 text-[10px] font-medium uppercase">Awareness Layer</p>
+                            </div>
+                        </div>
+
+                        <div class="image-placeholder mb-8 border-blue-500/30">
+                            <img width="100%"src="https://duk.tw/296WBQ.png" alt="廣告分析圖表" class="project-img"></a>
+                            <i class="fas fa-cat text-7xl text-blue-500/10 mb-4"></i>
+                            <div class="text-center px-6">
+                                <p class="text-blue-300 font-bold text-xl mb-1">「明天要出國了...」</p>
+                            </div>
+                            <div class="absolute top-4 right-4">
+                                <span class="bg-blue-600 text-[10px] px-3 py-1 rounded-full font-bold text-white shadow-lg">放量主力</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-8">
+                            <div class="data-tag border-l-4 border-blue-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">單次連結成本(CPC)</span>
+                                <span class="text-xl font-bold text-blue-400">$4.42</span>
+                            </div>
+                            <div class="data-tag border-l-4 border-blue-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">點擊率(CTR)</span>
+                                <span class="text-xl font-bold text-blue-400">1.2%</span>
+                            </div>
+                            <div class="data-tag border-l-4 border-blue-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">投入花費</span>
+                                <span class="text-xl font-bold text-blue-400">$39,098</span>
+                            </div>
+                            <div class="data-tag border-l-4 border-blue-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">曝光次數</span>
+                                <span class="text-xl font-bold text-blue-400">717,443</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 mb-8">
+                            <div class="data-tag border-l-4 border-blue-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">連結頁面總覽</span>
+                                <span class="text-xl font-bold text-blue-400">8,836</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Asset B (Dog) -->
+                    <div class="relative lg:text-right">
+                        <div class="flex items-center lg:justify-end gap-4 mb-8">
+                            <div class="lg:order-2 w-12 h-12 bg-cyan-600 text-white flex items-center justify-center rounded-2xl font-bold italic text-xl">B</div>
+                            <div class="lg:order-1">
+                                <h3 class="text-2xl font-bold">滑雪狗：利益驅動</h3>
+                                <p class="text-cyan-400 text-[10px] font-medium uppercase">Consideration Layer</p>
+                            </div>
+                        </div>
+
+                        <div class="image-placeholder mb-8 border-cyan-500/30">
+                            <img width="100%"src="https://duk.tw/qblgJP.png" alt="廣告分析圖表" class="project-img"></a>
+                            <i class="fas fa-dog text-7xl text-cyan-500/10 mb-4"></i>
+                            <div class="text-center px-6">
+                                <p class="text-cyan-300 font-bold text-xl mb-1">「日本原生 5 折」</p>
+                            </div>
+                            <div class="absolute top-4 left-4">
+                                <span class="bg-cyan-600 text-[10px] px-3 py-1 rounded-full font-bold text-white shadow-lg">轉換效率</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-8">
+                            <div class="data-tag border-r-4 border-cyan-500 lg:text-right">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">單次連結成本(CPC)</span>
+                                <span class="text-xl font-bold text-cyan-400">$4.19</span>
+                            </div>
+                            <div class="data-tag border-r-4 border-cyan-500 lg:text-right">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">點擊率 (CTR)</span>
+                                <span class="text-xl font-bold text-cyan-400">1.31%</span>
+                            </div>
+                            <div class="data-tag border-r-4 border-cyan-500 lg:text-right">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">投入花費</span>
+                                <span class="text-xl font-bold text-cyan-400">$23,369</span>
+                            </div>
+                            <div class="data-tag border-r-4 border-cyan-500 lg:text-right">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">曝光次數</span>
+                                <span class="text-xl font-bold text-cyan-400">426,939</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 mb-8">
+                            <div class="data-tag border-r-4 border-cyan-500 lg:text-right">
+                                <span class="text-[10px] text-gray-500 block uppercase font-semibold">連結頁面總覽</span>
+                                <span class="text-xl font-bold text-cyan-400">5,580</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+         <!-- Logic C Section (Independent) -->
+        <section class="mb-24">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-shield-alt text-purple-500"></i> 素材 C：理性數據層 (Conversion)
+            </h2>
+            <div class="card-bg rounded-[2.5rem] p-8 lg:p-12 border-purple-500/20 shadow-xl overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <div class="md:col-span-1">
+                        <div class="image-placeholder border-purple-500/30 h-[300px]">
+                            <img width="100%"src="https://duk.tw/cJftPi.png" alt="廣告分析圖表" class="project-img"></a>
+                            <i class="fas fa-database text-6xl text-purple-500/10 mb-4"></i>
+                            <p class="text-purple-300 font-bold text-lg text-center px-4">「KDDI 實測數據」<br><span class="text-sm font-normal opacity-60">信任感建立專用</span></p>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 space-y-6">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1 data-tag border-t-4 border-purple-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-bold mb-1">平均轉換率 CVR</span>
+                                <span class="text-3xl font-black text-purple-400">4.82%</span>
+                            </div>
+                            <div class="flex-1 data-tag border-t-4 border-purple-500">
+                                <span class="text-[10px] text-gray-500 block uppercase font-bold mb-1">ROAS 表現</span>
+                                <span class="text-3xl font-black text-purple-400">3.45</span>
+                            </div>
+                        </div>
+                        <div class="bg-black/30 p-6 rounded-2xl border border-white/5">
+                            <h4 class="text-purple-300 font-bold mb-2">策略定位：收網與信任</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed">
+                                此素材不參與前期的流量競爭，而是針對「已點擊過廣告」或「已造訪官網」的用戶進行精準再行銷。透過 KDDI 的測速數據（80Mbps+）解決用戶對 eSIM 網速的不穩定疑慮，是 12 月份高 ROAS 的關鍵推手。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Post-Campaign Analysis -->
+        <section class="mb-24">
+            <h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+                <i class="fas fa-microscope text-blue-500"></i> 成效深度分析：PM 複盤洞察
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Analysis Card 1 -->
+                <div class="card-bg p-8 rounded-3xl">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-coins text-blue-400 text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-4">ROAS 與成本優化</h4>
+                    <ul class="text-gray-400 text-sm space-y-3 leading-relaxed">
+                        <li class="flex gap-2"><i class="fas fa-check-circle text-blue-500 mt-1"></i> 整體 ROAS 2.13 優於 Q3 平均 (1.85)，歸功於漏斗分層策略。</li>
+                        <li class="flex gap-2"><i class="fas fa-check-circle text-blue-500 mt-1"></i> 「驚訝貓」成功壓低 CPM 至 $54.5，為品牌爭取到極高聲量。</li>
+                    </ul>
+                </div>
+                <!-- Analysis Card 2 -->
+                <div class="card-bg p-8 rounded-3xl">
+                    <div class="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-users text-cyan-400 text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-4">受眾行為洞察</h4>
+                    <ul class="text-gray-400 text-sm space-y-3 leading-relaxed">
+                        <li class="flex gap-2"><i class="fas fa-check-circle text-cyan-500 mt-1"></i> 滑雪狗素材與「冬季運動」興趣標籤高度重合，帶動 CTR 提升 15%。</li>
+                        <li class="flex gap-2"><i class="fas fa-check-circle text-cyan-500 mt-1"></i> 再行銷受眾 (Retargeting) 佔總轉換單數之 42%，顯示多點接觸之必要性。</li>
+                    </ul>
+                </div>
+                <!-- Analysis Card 3 -->
+                <div class="card-bg p-8 rounded-3xl">
+                    <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-lightbulb text-purple-400 text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-4">下階段策略建議</h4>
+                    <ul class="text-gray-400 text-sm space-y-3 leading-relaxed">
+                        <li class="flex gap-2"><i class="fas fa-check-circle text-purple-500 mt-1"></i> 理性素材 (KDDI) 可加入更多 KOC 真實實測，增加「人味」以提高信任。</li>
+                        <li class="flex gap-2"><i class="fas fa-check-circle text-purple-500 mt-1"></i> 規劃春季櫻花季素材，延續「情緒 -> 利益 -> 理性」三維度模型。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-16 text-center border-t border-gray-900 bg-black/50">
+        <p class="text-gray-500 text-[10px] uppercase tracking-[0.4em] font-bold mb-3">Growth PM Case Study Portfolio</p>
+        <p class="text-gray-600 text-xs font-light">數據驅動決策 | 策略創意執行 | 專案增長管理</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta 廣告投放成效優化實戰 | PM 作品集</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #020617; /* Slate 950 */
+            color: #e2e8f0; /* Slate 200 */
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        /* Neon Glow Utility */
+        .neon-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        .neon-border {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-500 selection:text-white overflow-x-hidden relative">
+
+    <!-- Close Button (Fixed Top Right) -->
+    <a href="PM4.html" class="fixed top-6 right-6 z-50 group">
+        <div class="w-12 h-12 rounded-full bg-slate-800/80 border border-slate-600 flex items-center justify-center backdrop-blur-sm transition-all duration-300 group-hover:bg-red-500/20 group-hover:border-red-500 group-hover:rotate-90 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300 group-hover:text-red-500 transition-colors">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+    </a>
+
+    <!-- Background Effects -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="relative z-10 pt-20 pb-12 px-6">
+        <div class="max-w-6xl mx-auto text-center border-b border-slate-800 pb-12">
+            <div class="inline-block px-4 py-1 mb-4 rounded-full border border-cyan-500/30 bg-cyan-950/30 text-cyan-400 text-xs font-bold tracking-wider uppercase shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                Portfolio Case Study
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-300 neon-text pb-2">
+                Meta 廣告投放成效優化
+            </h1>
+            <p class="text-xl md:text-2xl font-light mb-6 text-slate-400">運用受眾分層與動態素材測試，實現 ROAS 翻倍成長</p>
+            <div class="flex justify-center gap-4 text-sm text-slate-500 font-mono">
+                <span>// Product Manager</span>
+                <span class="text-cyan-600">•</span>
+                <span>// Growth Strategy</span>
+                <span class="text-cyan-600">•</span>
+                <span>// 2025Q4-2026Q2</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-6xl mx-auto px-6 py-8 space-y-20">
+
+        <!-- Section 1: Context & KPIs -->
+        <section>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-4xl font-black text-slate-800 select-none">01</span>
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-cyan-500 rounded-sm shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+                        專案背景與核心指標
+                    </h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Business Goals -->
+                <div class="bg-slate-900/50 backdrop-blur-md rounded-2xl p-8 border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 neon-border group">
+                    <h3 class="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        商業目標 (Business Goal)
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                            <span class="text-cyan-400 font-bold text-lg mr-3">01.</span>
+                            <span class="text-slate-300"><strong>Scale Up:</strong> 在維持 CPA 穩定的前提下，最大化營收規模。</span>
+                        </li>
+                        <li class="flex items-start bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                            <span class="text-cyan-400 font-bold text-lg mr-3">02.</span>
+                            <span class="text-slate-300"><strong>Diversify:</strong> 找出第二條高轉換受眾曲線，降低對單一受眾依賴。</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Pain Points -->
+                <div class="bg-slate-900/50 backdrop-blur-md rounded-2xl p-8 border border-slate-700/50 hover:border-red-500/50 transition-all duration-300 neon-border">
+                    <h3 class="text-xl font-bold text-red-400 mb-6 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        投放前痛點 (Pain Points)
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="bg-red-900/20 p-2 rounded text-red-400 mr-3">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </div>
+                            <div class="text-slate-300 pt-1">
+                                <strong class="text-white">流量昂貴:</strong> 平均 CPC 過高，導致前端流量不足。
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-red-900/20 p-2 rounded text-red-400 mr-3">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+                            </div>
+                            <div class="text-slate-300 pt-1">
+                                <strong class="text-white">轉換疲乏:</strong> 廣告頻率 (Frequency) > 2.5，ROAS 呈現明顯下滑趨勢。
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Strategy (A/B Tests) -->
+        <section>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-4xl font-black text-slate-800 select-none">02</span>
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-blue-500 rounded-sm shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
+                        實驗設計與執行
+                    </h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1: Audience -->
+                <div class="bg-slate-900/50 rounded-xl overflow-hidden border border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                        <h3 class="font-bold text-blue-400">A. 受眾 (Audience)</h3>
+                        <span class="text-xs font-mono text-slate-500">TEST-01</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6 text-sm">
+                            <span class="text-slate-400">LAL 1% (舊)</span>
+                            <span class="font-bold text-blue-500 px-2 py-0.5 bg-blue-900/30 rounded border border-blue-500/30 text-xs">VS</span>
+                            <span class="text-cyan-300 font-bold">Broad 廣泛 (新)</span>
+                        </div>
+                        <div class="relative pl-3 border-l-2 border-slate-700">
+                            <p class="text-xs text-slate-400 uppercase mb-1 font-bold tracking-wider">Hypothesis</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                機器學習成熟後，廣泛受眾能自行尋找更便宜的轉換機會。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Creative -->
+                <div class="bg-slate-900/50 rounded-xl overflow-hidden border border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                        <h3 class="font-bold text-blue-400">B. 素材 (Creative)</h3>
+                        <span class="text-xs font-mono text-slate-500">TEST-02</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6 text-sm">
+                            <span class="text-slate-400">靜態圖</span>
+                            <span class="font-bold text-blue-500 px-2 py-0.5 bg-blue-900/30 rounded border border-blue-500/30 text-xs">VS</span>
+                            <span class="text-cyan-300 font-bold">UGC 短影音</span>
+                        </div>
+                        <div class="relative pl-3 border-l-2 border-slate-700">
+                            <p class="text-xs text-slate-400 uppercase mb-1 font-bold tracking-wider">Hypothesis</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                真人實測影片能提升前 3 秒留存，進而降低 CPM。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Placement -->
+                <div class="bg-slate-900/50 rounded-xl overflow-hidden border border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                        <h3 class="font-bold text-blue-400">C. 版位 (Placement)</h3>
+                        <span class="text-xs font-mono text-slate-500">TEST-03</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6 text-sm">
+                            <span class="text-slate-400">自動版位</span>
+                            <span class="font-bold text-blue-500 px-2 py-0.5 bg-blue-900/30 rounded border border-blue-500/30 text-xs">VS</span>
+                            <span class="text-cyan-300 font-bold">Stories/Reels</span>
+                        </div>
+                        <div class="relative pl-3 border-l-2 border-slate-700">
+                            <p class="text-xs text-slate-400 uppercase mb-1 font-bold tracking-wider">Hypothesis</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                針對直立式影音素材，排除 Feed 版位可提升 CTR。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Section: Execution Timeline -->
+        <section>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-4xl font-black text-slate-800 select-none">03</span>
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-indigo-500 rounded-sm shadow-[0_0_8px_rgba(99,102,241,0.8)]"></span>
+                        專案執行時程
+                    </h2>
+                </div>
+            </div>
+
+            <div class="relative pl-8 border-l border-slate-700 space-y-12">
+                <!-- Timeline Item 1 -->
+                <div class="relative group">
+                    <div class="absolute -left-[37px] top-1 w-4 h-4 bg-slate-900 rounded-full border-2 border-blue-500 group-hover:bg-blue-500 group-hover:shadow-[0_0_10px_rgba(59,130,246,0.8)] transition-all"></div>
+                    <div class="bg-slate-900/80 p-6 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all">
+                        <span class="inline-block px-3 py-1 bg-blue-950 text-blue-300 text-xs font-bold rounded mb-3 border border-blue-900">Week 1: Diagnosis</span>
+                        <h3 class="text-lg font-bold text-white mb-2">現狀盤點與策略制定</h3>
+                        <ul class="list-disc list-inside text-slate-400 text-sm space-y-1 marker:text-blue-500">
+                            <li>分析過去 3 個月廣告後台數據，鎖定「CPA 過高」為核心問題。</li>
+                            <li>產出 3 組目標受眾 (Persona) 假設與 5 組 UGC 影片腳本。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 2 -->
+                <div class="relative group">
+                    <div class="absolute -left-[37px] top-1 w-4 h-4 bg-slate-900 rounded-full border-2 border-cyan-500 group-hover:bg-cyan-500 group-hover:shadow-[0_0_10px_rgba(6,182,212,0.8)] transition-all"></div>
+                    <div class="bg-slate-900/80 p-6 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-all">
+                        <span class="inline-block px-3 py-1 bg-cyan-950 text-cyan-300 text-xs font-bold rounded mb-3 border border-cyan-900">Week 2-3: A/B Testing</span>
+                        <h3 class="text-lg font-bold text-white mb-2">小規模預算驗證</h3>
+                        <ul class="list-disc list-inside text-slate-400 text-sm space-y-1 marker:text-cyan-500">
+                            <li>啟動 Split Test：測試 Broad vs LAL 受眾。</li>
+                            <li>預算配置策略：20% 用於測試新素材，80% 維持舊有高成效廣告。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 3 -->
+                <div class="relative group">
+                    <div class="absolute -left-[37px] top-1 w-4 h-4 bg-slate-900 rounded-full border-2 border-teal-500 group-hover:bg-teal-500 group-hover:shadow-[0_0_10px_rgba(20,184,166,0.8)] transition-all"></div>
+                    <div class="bg-slate-900/80 p-6 rounded-xl border border-slate-700/50 hover:border-teal-500/50 transition-all">
+                        <span class="inline-block px-3 py-1 bg-teal-950 text-teal-300 text-xs font-bold rounded mb-3 border border-teal-900">Week 4: Optimization</span>
+                        <h3 class="text-lg font-bold text-white mb-2">數據決策點 (Decision Point)</h3>
+                        <ul class="list-disc list-inside text-slate-400 text-sm space-y-1 marker:text-teal-500">
+                            <li>確認 Broad Targeting CPA 優於 LAL 15%，決定調整主力受眾。</li>
+                            <li>UGC 影片素材勝出，CTR 達 2.0% 以上，確認為 Scaling 核心素材。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 4 -->
+                <div class="relative group">
+                    <div class="absolute -left-[37px] top-1 w-4 h-4 bg-slate-900 rounded-full border-2 border-green-500 group-hover:bg-green-500 group-hover:shadow-[0_0_10px_rgba(34,197,94,0.8)] transition-all"></div>
+                    <div class="bg-slate-900/80 p-6 rounded-xl border border-slate-700/50 hover:border-green-500/50 transition-all">
+                        <span class="inline-block px-3 py-1 bg-green-950 text-green-300 text-xs font-bold rounded mb-3 border border-green-900">Week 5-8: Scaling</span>
+                        <h3 class="text-lg font-bold text-white mb-2">全面放量與迭代</h3>
+                        <ul class="list-disc list-inside text-slate-400 text-sm space-y-1 marker:text-green-500">
+                            <li>每週逐步增加獲勝廣告組預算 20% (Vertical Scaling)。</li>
+                            <li>最終達成 ROAS 3.8x 與 CPA $120 的目標，營收翻倍。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Performance Highlights (Charts) -->
+        <section>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-4xl font-black text-slate-800 select-none">04</span>
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-cyan-400 rounded-sm shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
+                        關鍵數據成效
+                    </h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- ROAS Chart -->
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
+                    <h3 class="text-lg font-bold text-cyan-400 mb-1">ROAS (廣告投資報酬率)</h3>
+                    <p class="text-xs text-slate-500 mb-4 font-mono">KPI STATUS: <span class="text-green-400">EXCEEDED</span></p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="roasChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CPA Chart -->
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
+                    <h3 class="text-lg font-bold text-cyan-400 mb-1">CPA (單次獲客成本)</h3>
+                    <p class="text-xs text-slate-500 mb-4 font-mono">COST EFFICIENCY: <span class="text-green-400">+33%</span></p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="cpaChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CTR Chart -->
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
+                    <h3 class="text-lg font-bold text-cyan-400 mb-1">CTR (點擊率)</h3>
+                    <p class="text-xs text-slate-500 mb-4 font-mono">AD ENGAGEMENT: <span class="text-green-400">HIGH</span></p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="ctrChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CVR Chart -->
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 flex flex-col shadow-lg">
+                    <h3 class="text-lg font-bold text-cyan-400 mb-1">CVR (轉換率)</h3>
+                    <p class="text-xs text-slate-500 mb-4 font-mono">CONVERSION QUALITY: <span class="text-green-400">OPTIMIZED</span></p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="cvrChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Insights & Deep Dive -->
+        <section>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-4xl font-black text-slate-800 select-none">05</span>
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-purple-500 rounded-sm shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>
+                        洞察與學習
+                    </h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Insight 1: Learning Curve (Line Chart) -->
+                <div class="lg:col-span-2 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-200 mb-2">受眾紅利：機器學習甜蜜點</h3>
+                    <p class="text-sm text-slate-500 mb-4">廣泛受眾 (Broad) 在累積 50+ 轉換後，成本曲線顯著低於精準受眾。</p>
+                    <div class="chart-container">
+                        <canvas id="learningCurveChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Insight 2: Creative Win (Doughnut Chart) -->
+                <div class="lg:col-span-1 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-200 mb-2">素材贏家：預算重分配</h3>
+                    <p class="text-sm text-slate-500 mb-4">UGC 短影音表現優異，成為後期主力投放素材。</p>
+                    <div class="chart-container">
+                        <canvas id="creativeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Next Steps -->
+        <section>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-4xl font-black text-slate-800 select-none">06</span>
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-8 bg-pink-500 rounded-sm shadow-[0_0_8px_rgba(236,72,153,0.8)]"></span>
+                        未來優化計畫
+                    </h2>
+                </div>
+            </div>
+
+            <div class="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 overflow-hidden border border-slate-700">
+                <div class="space-y-8 relative z-10">
+                    <!-- Step 1 -->
+                    <div class="flex items-start ml-4 group">
+                        <div class="absolute -left-2 mt-1 w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,1)]"></div>
+                        <div class="ml-6">
+                            <h4 class="text-lg font-bold text-blue-300 group-hover:text-blue-200 transition-colors">Horizontal Scaling (橫向擴展)</h4>
+                            <p class="text-slate-400 mt-1 text-sm">將驗證成功的「Broad 受眾 + UGC 腳本」模組，快速複製到其他相似品類的產品線。</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex items-start ml-4 group">
+                        <div class="absolute -left-2 mt-1 w-3 h-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,1)]"></div>
+                        <div class="ml-6">
+                            <h4 class="text-lg font-bold text-cyan-300 group-hover:text-cyan-200 transition-colors">Creative Iteration (素材迭代)</h4>
+                            <p class="text-slate-400 mt-1 text-sm">建立標準化素材產出流程。基於獲勝腳本，每週產出 3 支變體 (Variation) 進行持續測試。</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex items-start ml-4 group">
+                        <div class="absolute -left-2 mt-1 w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,1)]"></div>
+                        <div class="ml-6">
+                            <h4 class="text-lg font-bold text-purple-300 group-hover:text-purple-200 transition-colors">Automation Rules (自動化規則)</h4>
+                            <p class="text-slate-400 mt-1 text-sm">設定 Facebook 後台自動化規則，當 CPA 超過目標值的 20% 時自動暫停廣告。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center py-12 text-slate-600 text-xs font-mono border-t border-slate-900 mt-12">
+            <p>// END OF FILE // 2026 Product Manager Portfolio. All Data Simulated.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- Utility Functions ---
+
+        // Label Wrapping Logic (16 char limit)
+        function formatLabels(labels) {
+            return labels.map(label => {
+                if (label.length > 16) {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = words[0];
+
+                    for (let i = 1; i < words.length; i++) {
+                        if ((currentLine + ' ' + words[i]).length <= 16) {
+                            currentLine += ' ' + words[i];
+                        } else {
+                            lines.push(currentLine);
+                            currentLine = words[i];
+                        }
+                    }
+                    lines.push(currentLine);
+                    return lines;
+                }
+                return label;
+            });
+        }
+
+        // Common Tooltip Configuration
+        const commonTooltipConfig = {
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            titleColor: '#e2e8f0',
+            bodyColor: '#94a3b8',
+            borderColor: 'rgba(56, 189, 248, 0.2)',
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(' ');
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        // --- Chart Configurations (Dark Mode Updates) ---
+
+        Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+        Chart.defaults.color = '#94a3b8'; // Slate 400 for labels
+        Chart.defaults.scale.grid.color = 'rgba(51, 65, 85, 0.3)'; // Subtle grid lines
+
+        // 1. ROAS Chart
+        const roasCtx = document.getElementById('roasChart').getContext('2d');
+        // Create Gradient
+        let roasGradient = roasCtx.createLinearGradient(0, 0, 0, 400);
+        roasGradient.addColorStop(0, '#38bdf8'); // Sky 400
+        roasGradient.addColorStop(1, '#0284c7'); // Sky 600
+
+        new Chart(roasCtx, {
+            type: 'bar',
+            data: {
+                labels: ['優化前', '優化後'],
+                datasets: [{
+                    label: 'ROAS',
+                    data: [2.1, 3.8],
+                    backgroundColor: ['rgba(148, 163, 184, 0.2)', roasGradient],
+                    hoverBackgroundColor: ['rgba(148, 163, 184, 0.4)', '#0ea5e9'],
+                    borderRadius: 4,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: commonTooltipConfig
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 2. CPA Chart
+        const cpaCtx = document.getElementById('cpaChart').getContext('2d');
+        // Create Gradient
+        let cpaGradient = cpaCtx.createLinearGradient(0, 0, 0, 400);
+        cpaGradient.addColorStop(0, '#22d3ee'); // Cyan 400
+        cpaGradient.addColorStop(1, '#0891b2'); // Cyan 600
+
+        new Chart(cpaCtx, {
+            type: 'bar',
+            data: {
+                labels: ['優化前', '優化後'],
+                datasets: [{
+                    label: 'CPA ($)',
+                    data: [180, 120],
+                    backgroundColor: ['rgba(148, 163, 184, 0.2)', cpaGradient],
+                    hoverBackgroundColor: ['rgba(148, 163, 184, 0.4)', '#06b6d4'],
+                    borderRadius: 4,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: commonTooltipConfig
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 3. CTR Chart
+        const ctrCtx = document.getElementById('ctrChart').getContext('2d');
+        // Create Gradient
+        let ctrGradient = ctrCtx.createLinearGradient(0, 0, 0, 400);
+        ctrGradient.addColorStop(0, '#818cf8'); // Indigo 400
+        ctrGradient.addColorStop(1, '#4f46e5'); // Indigo 600
+
+        new Chart(ctrCtx, {
+            type: 'bar',
+            data: {
+                labels: ['優化前', '優化後'],
+                datasets: [{
+                    label: 'CTR (%)',
+                    data: [0.8, 2.4],
+                    backgroundColor: ['rgba(148, 163, 184, 0.2)', ctrGradient],
+                    hoverBackgroundColor: ['rgba(148, 163, 184, 0.4)', '#6366f1'],
+                    borderRadius: 4,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: commonTooltipConfig
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 4. CVR Chart
+        const cvrCtx = document.getElementById('cvrChart').getContext('2d');
+        // Create Gradient
+        let cvrGradient = cvrCtx.createLinearGradient(0, 0, 0, 400);
+        cvrGradient.addColorStop(0, '#2dd4bf'); // Teal 400
+        cvrGradient.addColorStop(1, '#0d9488'); // Teal 600
+
+        new Chart(cvrCtx, {
+            type: 'bar',
+            data: {
+                labels: ['優化前', '優化後'],
+                datasets: [{
+                    label: 'CVR (%)',
+                    data: [1.5, 4.2],
+                    backgroundColor: ['rgba(148, 163, 184, 0.2)', cvrGradient],
+                    hoverBackgroundColor: ['rgba(148, 163, 184, 0.4)', '#14b8a6'],
+                    borderRadius: 4,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: commonTooltipConfig
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 5. Learning Curve Chart (Line)
+        const learningCtx = document.getElementById('learningCurveChart').getContext('2d');
+        const learningDataPoints = [180, 175, 160, 145, 130, 122, 120];
+        const learningLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7'];
+        
+        // Gradient Fill
+        let lineGradient = learningCtx.createLinearGradient(0, 0, 0, 300);
+        lineGradient.addColorStop(0, 'rgba(56, 189, 248, 0.5)');
+        lineGradient.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+        new Chart(learningCtx, {
+            type: 'line',
+            data: {
+                labels: formatLabels(learningLabels),
+                datasets: [{
+                    label: 'CPA (Broad Audience)',
+                    data: learningDataPoints,
+                    borderColor: '#38bdf8', // Sky 400
+                    backgroundColor: lineGradient,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#020617',
+                    pointBorderColor: '#38bdf8',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Target CPA Goal ($130)',
+                    data: Array(7).fill(130),
+                    borderColor: '#ef4444',
+                    borderWidth: 1,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    tooltip: commonTooltipConfig,
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 100,
+                        grid: { color: 'rgba(51, 65, 85, 0.3)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 6. Creative Budget Allocation (Doughnut)
+        const creativeCtx = document.getElementById('creativeChart').getContext('2d');
+        new Chart(creativeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['UGC 短影音', '靜態圖'],
+                datasets: [{
+                    data: [75, 25],
+                    backgroundColor: ['#0ea5e9', '#1e293b'],
+                    borderColor: '#020617',
+                    borderWidth: 4,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: commonTooltipConfig,
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8' }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+    </script>
+</body>
+</html>
